@@ -1,31 +1,40 @@
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, URLField, StringField
+from wtforms import StringField, SubmitField, URLField
 from wtforms.validators import (URL, DataRequired, Length, Optional, Regexp,
                                 ValidationError)
+
 from .models import URLMap
-from .settings import MAX_URL_LENGTH, SHORT_URL_LENGTH
+from .settings import MAX_URL_LENGTH, USER_SHORT_URL_LENGTH, VALID_SYMBOLS
+
+ENTER_URL = 'Введите ссылку'
+REQUIRED_FIELD = 'Обязательное поле'
+INVALID_URL = 'Некорректный URL'
+ENTER_SHORT_URL = 'Ваш вариант короткой ссылки'
+ALLOWED_SYMBOLS = 'Можно использовать только {symbols}'
+CREATE = 'Создать'
+ID_IS_TAKEN = 'Имя {id} уже занято!'
 
 
 class URLMapForm(FlaskForm):
     original_link = URLField(
-        'Введите ссылку', validators=[
-            DataRequired(message='Обязательное поле'),
-            Length(1, MAX_URL_LENGTH),
-            URL(require_tld=True, message=('Некорректный URL'))
+        ENTER_URL, validators=[
+            DataRequired(message=REQUIRED_FIELD),
+            Length(max=MAX_URL_LENGTH),
+            URL(require_tld=True, message=(INVALID_URL))
         ]
     )
     custom_id = StringField(
-        'Ваш вариант короткой ссылки', validators=[
-            Length(1, SHORT_URL_LENGTH),
+        ENTER_SHORT_URL, validators=[
+            Length(max=USER_SHORT_URL_LENGTH),
             Optional(),
             Regexp(
-                r'^[A-Za-z0-9]+$',
-                message='Можно использовать только [A-Z, a-z, 0-9]'
+                rf'^[{VALID_SYMBOLS}]+$',
+                message=ALLOWED_SYMBOLS.format(symbols=VALID_SYMBOLS)
             )
         ]
     )
-    submit = SubmitField('Создать')
+    submit = SubmitField(CREATE)
 
     def validate_custom_id(self, field):
-        if field.data and URLMap.query.filter_by(short=field.data).first():
-            raise ValidationError(f'Имя {field.data} уже занято!')
+        if field.data and URLMap.get_entry(short=field.data):
+            raise ValidationError(ID_IS_TAKEN.format(id=field.data))

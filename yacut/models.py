@@ -1,10 +1,12 @@
 from datetime import datetime
+from random import sample
 
 from flask import url_for
 
 from yacut import db
 
-from .settings import MAX_URL_LENGTH, SHORT_URL_LENGTH
+from .settings import (MAX_URL_LENGTH, NUMBER_OF_CYCLES, REDIRECT_VIEW,
+                       SHORT_URL_LENGTH, VALID_SYMBOLS)
 
 
 class URLMap(db.Model):
@@ -17,10 +19,31 @@ class URLMap(db.Model):
         return dict(
             url=self.original,
             short_link=url_for(
-                'redirect_view', short=self.short, _external=True
+                REDIRECT_VIEW, short=self.short, _external=True
             ),
         )
 
-    def from_dict(self, data):
-        setattr(self, 'original', data['url'])
-        setattr(self, 'short', data['custom_id'])
+    @staticmethod
+    def create_entry(original, short):
+        if short is None:
+            short = URLMap.get_short_id()
+        else:
+            short = short
+        db.session.add(URLMap(original=original, short=short))
+        db.session.commit()
+        return short
+
+    @staticmethod
+    def get_short_id():
+        for _ in range(NUMBER_OF_CYCLES):
+            short_id = ''.join(sample(VALID_SYMBOLS, SHORT_URL_LENGTH))
+            if not URLMap.query.filter_by(short=short_id).first():
+                return short_id
+
+    @staticmethod
+    def get_entry(short):
+        return URLMap.query.filter_by(short=short).first()
+
+    @staticmethod
+    def get_original_link(short):
+        return URLMap.query.filter_by(short=short).first_or_404().original
