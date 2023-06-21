@@ -9,6 +9,7 @@ from .models import URLMap
 REQUEST_BODY_IS_MISSING = 'Отсутствует тело запроса'
 URL_IS_MISSING = '"url" является обязательным полем!'
 ID_NOT_FOUND = 'Указанный id не найден'
+ERROR = 'Произошла ошибка при создании короткой ссылки'
 
 
 @app.route('/api/id/', methods=['POST'])
@@ -19,9 +20,15 @@ def create_id():
     if 'url' not in data:
         raise InvalidAPIUsageError(URL_IS_MISSING)
     if 'custom_id' not in data or data['custom_id'] is None:
-        data['custom_id'] = URLMap.get_short()
-    entry = URLMap.create_entry(original=data['url'], short=data['custom_id'])
-    return jsonify(entry.to_dict()), HTTPStatus.CREATED
+        data['custom_id'] = None
+    try:
+        return jsonify(
+            URLMap.create_entry(
+                original=data['url'], short=data['custom_id']
+            ).to_dict()
+        ), HTTPStatus.CREATED
+    except Exception:
+        raise InvalidAPIUsageError(ERROR)
 
 
 @app.route('/api/id/<string:short_id>/')

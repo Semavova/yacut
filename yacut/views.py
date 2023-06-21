@@ -15,7 +15,7 @@ def index_view():
         return render_template(
             'index.html',
             form=form,
-            short=url_for(
+            short_url=url_for(
                 REDIRECT_VIEW,
                 short=URLMap.create_entry(
                     original=form.original_link.data,
@@ -31,4 +31,4 @@ def index_view():
 
 @app.route('/<string:short>')
 def redirect_view(short):
-    return redirect(URLMap.get_original_link(short))
+    return redirect(URLMap.get_original_link_or_404(short))

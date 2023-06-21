@@ -4,7 +4,8 @@ from wtforms.validators import (URL, DataRequired, Length, Optional, Regexp,
                                 ValidationError)
 
 from .models import URLMap
-from .settings import MAX_URL_LENGTH, REG_EXP, USER_SHORT_LENGTH, VALID_SYMBOLS
+from .settings import (MAX_URL_LENGTH, SHORT_REG_EXP, USER_SHORT_LENGTH,
+                       VALID_SYMBOLS)
 
 ENTER_URL = 'Введите ссылку'
 REQUIRED_FIELD = 'Обязательное поле'
@@ -28,7 +29,7 @@ class URLMapForm(FlaskForm):
             Length(max=USER_SHORT_LENGTH),
             Optional(),
             Regexp(
-                REG_EXP,
+                SHORT_REG_EXP,
                 message=ALLOWED_SYMBOLS.format(symbols=VALID_SYMBOLS)
             )
         ]

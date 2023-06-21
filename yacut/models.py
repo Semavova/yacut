@@ -7,9 +7,11 @@ from flask import url_for
 from yacut import db
 from .error_handlers import InvalidAPIUsageError, ShortGeneratingError
 from .settings import (MAX_URL_LENGTH, NUMBER_OF_CYCLES, REDIRECT_VIEW,
-                       REG_EXP, SHORT_LENGTH, USER_SHORT_LENGTH, VALID_SYMBOLS)
+                       SHORT_LENGTH, SHORT_REG_EXP, USER_SHORT_LENGTH,
+                       VALID_SYMBOLS)
 
 INVALID_SHORT_NAME = 'Указано недопустимое имя для короткой ссылки'
+ORIGINAL_TOO_LONG = 'Оригинальная ссылка слишком длинная'
 ID_IS_TAKEN = 'Имя "{id}" уже занято.'
 SHORT_GENERATOR_ERROR = 'Не удалось сгенерировать короткую ссылку'
 
@@ -30,14 +32,15 @@ class URLMap(db.Model):
 
     @staticmethod
     def create_entry(original, short):
-        if not short or short is None:
-            short = URLMap.get_short()
+        if len(original) > MAX_URL_LENGTH:
+            raise InvalidAPIUsageError(ORIGINAL_TOO_LONG)
+        if short:
+            if len(short) > USER_SHORT_LENGTH:
+                raise InvalidAPIUsageError(INVALID_SHORT_NAME)
+            if not match(SHORT_REG_EXP, short):
+                raise InvalidAPIUsageError(INVALID_SHORT_NAME)
         else:
-            short = short
-        if not match(REG_EXP, short):
-            raise InvalidAPIUsageError(INVALID_SHORT_NAME)
-        if len(short) > USER_SHORT_LENGTH:
-            raise InvalidAPIUsageError(INVALID_SHORT_NAME)
+            short = URLMap.get_short()
         if URLMap.get_entry(short=short):
             raise InvalidAPIUsageError(ID_IS_TAKEN.format(id=short))
         entry = URLMap(original=original, short=short)
@@ -49,7 +52,7 @@ class URLMap(db.Model):
     def get_short():
         for _ in range(NUMBER_OF_CYCLES):
             short = ''.join(sample(VALID_SYMBOLS, SHORT_LENGTH))
-            if not URLMap.query.filter_by(short=short).first():
+            if not URLMap.get_entry(short=short):
                 return short
         raise ShortGeneratingError(SHORT_GENERATOR_ERROR)
 
@@ -58,5 +61,5 @@ class URLMap(db.Model):
         return URLMap.query.filter_by(short=short).first()
 
     @staticmethod
-    def get_original_link(short):
+    def get_original_link_or_404(short):
         return URLMap.query.filter_by(short=short).first_or_404().original
