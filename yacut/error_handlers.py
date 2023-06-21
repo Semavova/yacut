@@ -5,6 +5,11 @@ from flask import jsonify, render_template
 from . import app, db
 
 
+class ShortGeneratingError(Exception):
+    """Вызывается при проблемах с генерированием короткой ссылки"""
+    pass
+
+
 class InvalidAPIUsageError(Exception):
 
     def __init__(self, message, status_code=HTTPStatus.BAD_REQUEST):
