@@ -3,13 +3,13 @@ from http import HTTPStatus
 from flask import jsonify, request
 
 from . import app
-from .error_handlers import InvalidAPIUsageError
+from .error_handlers import InvalidAPIUsageError, ShortGeneratingError
 from .models import URLMap
 
 REQUEST_BODY_IS_MISSING = 'Отсутствует тело запроса'
 URL_IS_MISSING = '"url" является обязательным полем!'
 ID_NOT_FOUND = 'Указанный id не найден'
-ERROR = 'Произошла ошибка при создании короткой ссылки'
+SHORT_GENERATOR_ERROR = 'Не удалось сгенерировать короткую ссылку'
 
 
 @app.route('/api/id/', methods=['POST'])
@@ -27,8 +27,8 @@ def create_id():
                 original=data['url'], short=data['custom_id']
             ).to_dict()
         ), HTTPStatus.CREATED
-    except Exception:
-        raise InvalidAPIUsageError(ERROR)
+    except ShortGeneratingError:
+        raise InvalidAPIUsageError(SHORT_GENERATOR_ERROR)
 
 
 @app.route('/api/id/<string:short_id>/')
