@@ -19,7 +19,8 @@ def index_view():
                 REDIRECT_VIEW,
                 short=URLMap.create_entry(
                     original=form.original_link.data,
-                    short=form.custom_id.data
+                    short=form.custom_id.data,
+                    data_verified=True
                 ).short,
                 _external=True
             )

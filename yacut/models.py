@@ -5,7 +5,9 @@ from re import match
 from flask import url_for
 
 from yacut import db
-from .error_handlers import InvalidAPIUsageError, ShortGeneratingError
+from .error_handlers import (OriginalTooLongError, ShortGeneratingError,
+                             ShortIsTakenError, ShortSymbolsError,
+                             ShortTooLongError)
 from .settings import (MAX_URL_LENGTH, NUMBER_OF_CYCLES, REDIRECT_VIEW,
                        SHORT_LENGTH, SHORT_REG_EXP, USER_SHORT_LENGTH,
                        VALID_SYMBOLS)
@@ -31,20 +33,18 @@ class URLMap(db.Model):
         )
 
     @staticmethod
-    def create_entry(original, short, api_flag=False):
-        if api_flag:
+    def create_entry(original, short, data_verified=False):
+        if not data_verified:
             if len(original) > MAX_URL_LENGTH:
-                raise InvalidAPIUsageError(ORIGINAL_TOO_LONG)
+                raise OriginalTooLongError(ORIGINAL_TOO_LONG)
             if short:
                 if len(short) > USER_SHORT_LENGTH:
-                    raise InvalidAPIUsageError(INVALID_SHORT_NAME)
+                    raise ShortTooLongError(INVALID_SHORT_NAME)
                 if not match(SHORT_REG_EXP, short):
-                    raise InvalidAPIUsageError(INVALID_SHORT_NAME)
+                    raise ShortSymbolsError(INVALID_SHORT_NAME)
                 if URLMap.get_entry(short=short):
-                    raise InvalidAPIUsageError(ID_IS_TAKEN.format(id=short))
-            else:
-                short = URLMap.get_short()
-        elif not short:
+                    raise ShortIsTakenError(ID_IS_TAKEN.format(id=short))
+        if not short:
             short = URLMap.get_short()
         entry = URLMap(original=original, short=short)
         db.session.add(entry)

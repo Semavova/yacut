@@ -3,7 +3,9 @@ from http import HTTPStatus
 from flask import jsonify, request
 
 from . import app
-from .error_handlers import InvalidAPIUsageError, ShortGeneratingError
+from .error_handlers import (InvalidAPIUsageError, OriginalTooLongError,
+                             ShortGeneratingError, ShortIsTakenError,
+                             ShortSymbolsError, ShortTooLongError)
 from .models import URLMap
 
 REQUEST_BODY_IS_MISSING = 'Отсутствует тело запроса'
@@ -24,11 +26,19 @@ def create_id():
     try:
         return jsonify(
             URLMap.create_entry(
-                original=data['url'], short=data['custom_id'], api_flag=True
+                original=data['url'], short=data['custom_id']
             ).to_dict()
         ), HTTPStatus.CREATED
-    except ShortGeneratingError:
-        raise InvalidAPIUsageError(SHORT_GENERATOR_ERROR)
+    except ShortGeneratingError as error:
+        raise InvalidAPIUsageError(f'{error}')
+    except OriginalTooLongError as error:
+        raise InvalidAPIUsageError(f'{error}')
+    except ShortTooLongError as error:
+        raise InvalidAPIUsageError(f'{error}')
+    except ShortSymbolsError as error:
+        raise InvalidAPIUsageError(f'{error}')
+    except ShortIsTakenError as error:
+        raise InvalidAPIUsageError(f'{error}')
 
 
 @app.route('/api/id/<string:short_id>/')

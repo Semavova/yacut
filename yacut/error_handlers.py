@@ -10,6 +10,26 @@ class ShortGeneratingError(Exception):
     pass
 
 
+class OriginalTooLongError(Exception):
+    """Вызывается при превышении длины оригинальной ссылки"""
+    pass
+
+
+class ShortTooLongError(Exception):
+    """Вызывается при превышении длины короткой ссылки"""
+    pass
+
+
+class ShortSymbolsError(Exception):
+    """Вызывается если короткая ссылка содержит запрещенные символы"""
+    pass
+
+
+class ShortIsTakenError(Exception):
+    """Вызывается если короткая ссылка уже занята"""
+    pass
+
+
 class InvalidAPIUsageError(Exception):
 
     def __init__(self, message, status_code=HTTPStatus.BAD_REQUEST):
