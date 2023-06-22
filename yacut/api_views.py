@@ -24,7 +24,7 @@ def create_id():
     try:
         return jsonify(
             URLMap.create_entry(
-                original=data['url'], short=data['custom_id']
+                original=data['url'], short=data['custom_id'], api_flag=True
             ).to_dict()
         ), HTTPStatus.CREATED
     except ShortGeneratingError:

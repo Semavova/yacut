@@ -31,4 +31,4 @@ def index_view():
 
 @app.route('/<string:short>')
 def redirect_view(short):
-    return redirect(URLMap.get_original_link_or_404(short))
+    return redirect(URLMap.get_original_or_404(short))

@@ -31,18 +31,21 @@ class URLMap(db.Model):
         )
 
     @staticmethod
-    def create_entry(original, short):
-        if len(original) > MAX_URL_LENGTH:
-            raise InvalidAPIUsageError(ORIGINAL_TOO_LONG)
-        if short:
-            if len(short) > USER_SHORT_LENGTH:
-                raise InvalidAPIUsageError(INVALID_SHORT_NAME)
-            if not match(SHORT_REG_EXP, short):
-                raise InvalidAPIUsageError(INVALID_SHORT_NAME)
-        else:
+    def create_entry(original, short, api_flag=False):
+        if api_flag:
+            if len(original) > MAX_URL_LENGTH:
+                raise InvalidAPIUsageError(ORIGINAL_TOO_LONG)
+            if short:
+                if len(short) > USER_SHORT_LENGTH:
+                    raise InvalidAPIUsageError(INVALID_SHORT_NAME)
+                if not match(SHORT_REG_EXP, short):
+                    raise InvalidAPIUsageError(INVALID_SHORT_NAME)
+                if URLMap.get_entry(short=short):
+                    raise InvalidAPIUsageError(ID_IS_TAKEN.format(id=short))
+            else:
+                short = URLMap.get_short()
+        elif not short:
             short = URLMap.get_short()
-        if URLMap.get_entry(short=short):
-            raise InvalidAPIUsageError(ID_IS_TAKEN.format(id=short))
         entry = URLMap(original=original, short=short)
         db.session.add(entry)
         db.session.commit()
@@ -61,5 +64,5 @@ class URLMap(db.Model):
         return URLMap.query.filter_by(short=short).first()
 
     @staticmethod
-    def get_original_link_or_404(short):
+    def get_original_or_404(short):
         return URLMap.query.filter_by(short=short).first_or_404().original
