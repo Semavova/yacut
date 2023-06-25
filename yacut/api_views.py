@@ -29,15 +29,13 @@ def create_id():
                 original=data['url'], short=data['custom_id']
             ).to_dict()
         ), HTTPStatus.CREATED
-    except ShortGeneratingError as error:
-        raise InvalidAPIUsageError(f'{error}')
-    except OriginalTooLongError as error:
-        raise InvalidAPIUsageError(f'{error}')
-    except ShortTooLongError as error:
-        raise InvalidAPIUsageError(f'{error}')
-    except ShortSymbolsError as error:
-        raise InvalidAPIUsageError(f'{error}')
-    except ShortIsTakenError as error:
+    except (
+        ShortGeneratingError,
+        OriginalTooLongError,
+        ShortTooLongError,
+        ShortSymbolsError,
+        ShortIsTakenError
+    ) as error:
         raise InvalidAPIUsageError(f'{error}')
 
 
