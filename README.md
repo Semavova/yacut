@@ -71,5 +71,4 @@ https://editor.swagger.io/
 - SQLAlchemy
 - Git
 
-## Автор
-[Vladimir Semochkin](https://github.com/Semavova)
+Автор: [Владимир Семочкин](https://github.com/Semavova)
